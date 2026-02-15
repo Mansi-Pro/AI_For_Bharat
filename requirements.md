@@ -112,13 +112,21 @@ An AI-powered platform that transforms any topic into multiple learning formats 
 - Sentiment analysis
 - Learning analytics
 
-### Technology Stack (Suggested)
-- Backend: Python (FastAPI/Django)
-- Frontend: React/Next.js
-- AI/ML: TensorFlow, PyTorch, OpenAI API
-- Database: PostgreSQL, MongoDB
-- Video Generation: D-ID, Synthesia API or custom solution
-- Cloud: AWS/GCP/Azure
+### Technology Stack (AWS Free Tier Focus)
+- **Backend**: Python (FastAPI) on AWS Lambda (Serverless)
+- **Frontend**: React/Next.js hosted on AWS Amplify
+- **AI/ML**: 
+  - Amazon Bedrock (Claude/Titan models - Free tier available)
+  - Amazon Translate (Free tier: 2M characters/month)
+  - Amazon Polly (Free tier: 5M characters/month for text-to-speech)
+  - Amazon Comprehend (NLP - Free tier available)
+  - Amazon SageMaker (Free tier: 250 hours/month)
+- **Database**: 
+  - Amazon RDS Free Tier (PostgreSQL - 750 hours/month)
+  - Amazon DynamoDB (Free tier: 25GB storage)
+- **Storage**: Amazon S3 (Free tier: 5GB storage)
+- **Video Processing**: AWS Elemental MediaConvert (Pay-as-you-go)
+- **Cloud**: AWS (Free Tier optimized)
 
 ## Success Metrics
 - User engagement rate > 70%

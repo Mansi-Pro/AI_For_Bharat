@@ -5,6 +5,65 @@ Complete AI Learning & Human Improvement Solution
 
 ## System Architecture
 
+### AWS-Based High-Level Architecture
+```
+┌─────────────────────────────────────────────────────┐
+│              Users (Web/Mobile)                     │
+└────────────────────┬────────────────────────────────┘
+                     │
+┌────────────────────▼────────────────────────────────┐
+│         Amazon CloudFront (CDN)                     │
+│         Free Tier: 1TB data transfer/month          │
+└────────────────────┬────────────────────────────────┘
+                     │
+        ┌────────────┴────────────┐
+        │                         │
+┌───────▼──────────┐    ┌────────▼─────────────────┐
+│  AWS Amplify     │    │  AWS API Gateway         │
+│  (Frontend Host) │    │  Free: 1M calls/month    │
+│  React/Next.js   │    └────────┬─────────────────┘
+└──────────────────┘             │
+                     ┌───────────┴───────────┐
+                     │                       │
+            ┌────────▼────────┐    ┌────────▼────────┐
+            │  Amazon Cognito │    │  AWS Lambda     │
+            │  (Auth)         │    │  (Serverless)   │
+            │  Free: 50K MAUs │    │  Free: 1M req/mo│
+            └─────────────────┘    └────────┬────────┘
+                                            │
+                     ┌──────────────────────┼──────────────────────┐
+                     │                      │                      │
+            ┌────────▼────────┐   ┌────────▼────────┐   ┌────────▼────────┐
+            │ Amazon Bedrock  │   │ Amazon Translate│   │ Amazon Polly    │
+            │ (LLM - Claude)  │   │ Free: 2M chars  │   │ Free: 5M chars  │
+            └─────────────────┘   └─────────────────┘   └─────────────────┘
+                     │
+            ┌────────▼────────┐   ┌─────────────────┐   ┌─────────────────┐
+            │ Amazon SageMaker│   │ Amazon          │   │ AWS Elemental   │
+            │ (ML Training)   │   │ Comprehend      │   │ MediaConvert    │
+            │ Free: 250 hrs   │   │ (NLP)           │   │ (Video)         │
+            └─────────────────┘   └─────────────────┘   └─────────────────┘
+                     │
+        ┌────────────┴────────────┐
+        │                         │
+┌───────▼──────────┐    ┌────────▼─────────────────┐
+│  Amazon RDS      │    │  Amazon DynamoDB         │
+│  (PostgreSQL)    │    │  (NoSQL)                 │
+│  Free: 750 hrs   │    │  Free: 25GB storage      │
+└──────────────────┘    └──────────────────────────┘
+        │
+┌───────▼──────────┐    ┌──────────────────────────┐
+│  Amazon S3       │    │  Amazon ElastiCache      │
+│  (Storage)       │    │  (Redis - Caching)       │
+│  Free: 5GB       │    └──────────────────────────┘
+└──────────────────┘
+        │
+┌───────▼──────────────────────────────────────────┐
+│         Amazon CloudWatch (Monitoring)           │
+│         Free: 10 custom metrics                  │
+└──────────────────────────────────────────────────┘
+```
+
 ### High-Level Architecture
 ```
 ┌─────────────────┐
@@ -71,20 +130,23 @@ Complete AI Learning & Human Improvement Solution
 - Push notifications
 
 ### 2. API Gateway
-- **Technology**: Kong or AWS API Gateway
+- **Technology**: AWS API Gateway (Free tier: 1M API calls/month)
 - **Responsibilities**:
   - Request routing
   - Rate limiting
   - Authentication/Authorization
   - API versioning
   - Request/response transformation
+- **Integration**: Direct integration with AWS Lambda functions
 
 ### 3. Application Services
 
 #### Authentication Service
+- **AWS Cognito** (Free tier: 50,000 MAUs)
 - OAuth 2.0 / JWT tokens
-- Social login integration
+- Social login integration (Google, Facebook)
 - Role-based access control
+- Multi-factor authentication built-in
 
 #### User Service
 - User profile management
@@ -112,7 +174,9 @@ Complete AI Learning & Human Improvement Solution
 
 #### NLP Engine
 - **Purpose**: Text understanding and generation
-- **Models**: GPT-4, Claude, or fine-tuned models
+- **AWS Services**:
+  - **Amazon Bedrock** - Claude 3 or Titan models (Free tier available)
+  - **Amazon Comprehend** - Entity recognition, sentiment analysis (Free tier: 50K units/month)
 - **Functions**:
   - Topic analysis
   - Content simplification
@@ -120,25 +184,31 @@ Complete AI Learning & Human Improvement Solution
   - Concept extraction
 
 #### Video Generation AI
-- **Technology**: D-ID API, Synthesia, or custom solution
+- **AWS Services**:
+  - **Amazon Polly** - Text-to-speech for voiceovers (Free tier: 5M characters/month)
+  - **AWS Elemental MediaConvert** - Video processing and rendering
+  - **Amazon Rekognition** - Image/video analysis (Free tier: 5,000 images/month)
 - **Process**:
-  1. Generate script from topic
-  2. Create storyboard
-  3. Generate animations
-  4. Add voiceover
-  5. Render final video
+  1. Generate script from topic using Bedrock
+  2. Create storyboard with static images
+  3. Generate voiceover with Amazon Polly
+  4. Combine using MediaConvert
+  5. Store in S3
 
 #### Learning Style Detector
+- **AWS Service**: Amazon SageMaker (Free tier: 250 hours/month)
 - **Input**: User interactions, quiz results, time spent
 - **Output**: Learning style profile (visual/auditory/kinesthetic)
-- **Algorithm**: Classification model (Random Forest, Neural Network)
+- **Algorithm**: Classification model trained on SageMaker
+- **Storage**: Model artifacts in S3
 
 #### Translation Engine
-- **Technology**: Google Translate API, DeepL, or custom model
+- **AWS Service**: Amazon Translate (Free tier: 2M characters/month)
 - **Features**:
-  - Real-time translation
+  - Real-time translation for 75+ languages
   - Context-aware translation
-  - Cultural adaptation
+  - Custom terminology support
+  - Batch translation for content
 
 #### Adaptive Difficulty System
 - **Algorithm**: Reinforcement learning
@@ -149,12 +219,13 @@ Complete AI Learning & Human Improvement Solution
   - Engagement metrics
 
 #### Personal AI Mentor
-- **Technology**: Conversational AI (GPT-4, Claude)
+- **AWS Service**: Amazon Bedrock with Claude 3 or Titan models
 - **Features**:
   - Context-aware responses
   - Motivational messaging
   - Progress insights
   - Study recommendations
+- **Integration**: AWS Lambda for serverless execution
 
 ### 5. Data Models
 
@@ -285,27 +356,35 @@ Traditional rule-based systems cannot:
 ## Scalability Strategy
 
 ### Horizontal Scaling
-- Containerization (Docker)
-- Orchestration (Kubernetes)
-- Auto-scaling based on load
+- **AWS Lambda** - Automatic scaling (Free tier: 1M requests/month)
+- **AWS Fargate** - Containerized workloads (if needed)
+- **AWS Auto Scaling** - Automatic capacity adjustment
 
 ### Caching Strategy
-- Redis for session data
-- CDN for static content
-- Database query caching
+- **Amazon ElastiCache** (Redis - Free tier available)
+- **Amazon CloudFront** - CDN for static content (Free tier: 1TB data transfer/month)
+- **DynamoDB DAX** - In-memory caching for DynamoDB
 
 ### Database Optimization
-- Indexing on frequently queried fields
-- Read replicas for analytics
-- Partitioning for large tables
+- **Amazon RDS** (Free tier: 750 hours/month, 20GB storage)
+  - Automated backups
+  - Read replicas for analytics
+  - Multi-AZ deployment for high availability
+- **Amazon DynamoDB** (Free tier: 25GB storage, 25 WCU/RCU)
+  - Auto-scaling
+  - Global tables for multi-region
+  - Point-in-time recovery
 
 ## Monitoring & Analytics
 
 ### System Monitoring
-- Application performance monitoring (APM)
-- Error tracking (Sentry)
-- Log aggregation (ELK stack)
-- Uptime monitoring
+- **Amazon CloudWatch** (Free tier: 10 custom metrics, 1M API requests)
+  - Application performance monitoring
+  - Log aggregation and analysis
+  - Custom dashboards
+  - Alarms and notifications
+- **AWS X-Ray** - Distributed tracing (Free tier: 100K traces/month)
+- **AWS CloudTrail** - API activity monitoring
 
 ### User Analytics
 - Learning engagement metrics
@@ -339,12 +418,71 @@ Traditional rule-based systems cannot:
 - Advanced gamification
 - Enterprise features
 
-## Technology Stack Summary
+## Technology Stack Summary (AWS Free Tier Optimized)
 
-- **Frontend**: React, Next.js, TypeScript
-- **Backend**: Python (FastAPI), Node.js
-- **AI/ML**: OpenAI API, TensorFlow, PyTorch
-- **Database**: PostgreSQL, MongoDB, Redis
-- **Cloud**: AWS (EC2, S3, Lambda, RDS)
-- **DevOps**: Docker, Kubernetes, GitHub Actions
-- **Monitoring**: Prometheus, Grafana, Sentry
+### Frontend
+- **Hosting**: AWS Amplify (Free tier: 1000 build minutes/month)
+- **Framework**: React, Next.js, TypeScript
+- **CDN**: Amazon CloudFront (Free tier: 1TB data transfer)
+
+### Backend
+- **Compute**: AWS Lambda (Free tier: 1M requests/month)
+- **API**: AWS API Gateway (Free tier: 1M calls/month)
+- **Framework**: Python (FastAPI)
+
+### AI/ML Services
+- **Amazon Bedrock** - LLM models (Claude 3, Titan)
+- **Amazon Translate** - Multi-language support (Free tier: 2M chars/month)
+- **Amazon Polly** - Text-to-speech (Free tier: 5M chars/month)
+- **Amazon Comprehend** - NLP analysis (Free tier: 50K units/month)
+- **Amazon SageMaker** - ML model training (Free tier: 250 hours/month)
+- **Amazon Rekognition** - Image/video analysis (Free tier: 5K images/month)
+
+### Database & Storage
+- **Amazon RDS** - PostgreSQL (Free tier: 750 hours/month, 20GB)
+- **Amazon DynamoDB** - NoSQL (Free tier: 25GB storage)
+- **Amazon S3** - Object storage (Free tier: 5GB)
+- **Amazon ElastiCache** - Redis caching
+
+### Authentication & Security
+- **Amazon Cognito** - User authentication (Free tier: 50K MAUs)
+- **AWS IAM** - Access management
+- **AWS KMS** - Encryption key management
+
+### Media Processing
+- **AWS Elemental MediaConvert** - Video processing
+- **Amazon Polly** - Voice generation
+
+### Monitoring & DevOps
+- **Amazon CloudWatch** - Monitoring & logs (Free tier: 10 metrics)
+- **AWS X-Ray** - Distributed tracing (Free tier: 100K traces/month)
+- **AWS CodePipeline** - CI/CD
+- **AWS CloudFormation** - Infrastructure as Code
+
+### Networking
+- **Amazon VPC** - Virtual private cloud (Free)
+- **AWS Route 53** - DNS service
+- **Amazon CloudFront** - Content delivery
+
+## AWS Free Tier Benefits
+
+### Always Free
+- AWS Lambda: 1M requests/month
+- Amazon DynamoDB: 25GB storage
+- Amazon Cognito: 50,000 MAUs
+- Amazon CloudWatch: 10 custom metrics
+
+### 12 Months Free
+- Amazon EC2: 750 hours/month (t2.micro)
+- Amazon RDS: 750 hours/month (db.t2.micro)
+- Amazon S3: 5GB storage
+- Amazon CloudFront: 1TB data transfer
+- AWS Amplify: 1000 build minutes
+
+### Cost Optimization Strategy
+1. Use Lambda for serverless compute (pay per request)
+2. Leverage DynamoDB for scalable NoSQL storage
+3. Use CloudFront CDN to reduce data transfer costs
+4. Implement caching with ElastiCache
+5. Use S3 lifecycle policies for old content
+6. Monitor usage with AWS Cost Explorer
